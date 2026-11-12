@@ -99,16 +99,17 @@ select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.075em;
+  gap: 0.045em;
   font-size: clamp(3.8rem, 16.5vw, 10.5rem);
   line-height: 1;
   letter-spacing: 0;
 }
 
 .digit {
+  --segment-thickness: 0.085em;
   position: relative;
   display: inline-block;
-  width: 0.62em;
+  width: 0.64em;
   height: 1em;
   flex: 0 0 auto;
 }
@@ -125,12 +126,13 @@ select {
   opacity: 1;
 }
 
+/* Horizontal and vertical bars share the same physical thickness. */
 .segment-a,
 .segment-d,
 .segment-g {
-  left: 19%;
-  width: 62%;
-  height: 8%;
+  left: calc(var(--segment-thickness) * 0.8);
+  width: calc(100% - var(--segment-thickness) * 1.6);
+  height: var(--segment-thickness);
 }
 
 .segment-a {
@@ -138,7 +140,8 @@ select {
 }
 
 .segment-g {
-  top: 46%;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .segment-d {
@@ -149,8 +152,8 @@ select {
 .segment-c,
 .segment-e,
 .segment-f {
-  width: 8%;
-  height: 34%;
+  width: var(--segment-thickness);
+  height: calc(50% + var(--segment-thickness) * 0.3);
 }
 
 .segment-b,
@@ -165,12 +168,12 @@ select {
 
 .segment-b,
 .segment-f {
-  top: 9%;
+  top: 0;
 }
 
 .segment-c,
 .segment-e {
-  bottom: 9%;
+  bottom: 0;
 }
 
 .separator {
