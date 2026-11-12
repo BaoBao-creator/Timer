@@ -91,7 +91,7 @@
 
     const formatted = formatTime(state.elapsedMs);
     renderTimerValue(formatted);
-    timerDisplay.setAttribute("aria-label", "Thời gian: " + formatted);
+    timerDisplay.setAttribute("aria-label", "Time: " + formatted);
 
     if (persist) saveSettings();
   }
@@ -228,7 +228,7 @@
     state.lastRenderedCentisecond = centiseconds;
     const formatted = formatTime(centiseconds * 10);
     renderTimerValue(formatted);
-    timerDisplay.setAttribute("aria-label", "Thời gian: " + formatted);
+    timerDisplay.setAttribute("aria-label", "Time: " + formatted);
   }
 
   function clearHoldData() {

@@ -39,3 +39,9 @@
 - **Cách hoạt động:** Trong holding/ready, timer thu nhỏ; khi bước sang ready, kết quả cũ được reset về 0.00. Khi bắt đầu running, timer trở lại kích thước bình thường. Nút cài đặt ẩn trong ready/running và hiện lại sau khi dừng.
 - **File phụ trách:** app.js (beginHold(), timeout chuyển READY(), renderTime()), styles.css (timer state và visibility của settings button).
 - **Giới hạn:** Các hiệu ứng CSS chỉ thay đổi transform/opacity; không tác động đến mốc thời gian đo.
+
+
+## Ngôn ngữ cài đặt
+- **Trạng thái:** Đã triển khai trong giao diện.
+- **Cách hoạt động:** Nhãn và lựa chọn trong bảng Settings dùng tiếng Anh: Background, Timer Color, Font, Modern, Classic, Elegant, Typewriter và 7-Segment LED.
+- **File phụ trách:** index.html. Accessible name của timer trong app.js cũng dùng tiếng Anh.
