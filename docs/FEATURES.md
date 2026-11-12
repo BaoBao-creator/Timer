@@ -31,3 +31,11 @@
 - **Cách hoạt động:** Timer canh giữa; nút cài đặt nằm cố định ở góc trên bên phải. Bảng cài đặt chỉ xuất hiện khi mở.
 - **File phụ trách:** index.html, styles.css.
 - **Giới hạn:** Cần kiểm tra trực quan trên thiết bị thực tế để xác nhận các font fallback và bố cục trên nhiều kích thước màn hình.
+
+
+## Phản hồi trạng thái khi chuẩn bị giải
+- **Mục đích:** Tạo tín hiệu trực quan rõ ràng cho thao tác giữ 500 ms và chuẩn bị bắt đầu lượt mới.
+- **Trạng thái:** Đã triển khai trong code.
+- **Cách hoạt động:** Trong holding/ready, timer thu nhỏ; khi bước sang ready, kết quả cũ được reset về 0.00. Khi bắt đầu running, timer trở lại kích thước bình thường. Nút cài đặt ẩn trong ready/running và hiện lại sau khi dừng.
+- **File phụ trách:** app.js (beginHold(), timeout chuyển READY(), renderTime()), styles.css (timer state và visibility của settings button).
+- **Giới hạn:** Các hiệu ứng CSS chỉ thay đổi transform/opacity; không tác động đến mốc thời gian đo.

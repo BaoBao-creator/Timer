@@ -67,14 +67,17 @@ select {
   transition: opacity 100ms ease, transform 100ms ease;
 }
 
+.timer[data-state="holding"],
+.timer[data-state="ready"] {
+  transform: scale(0.88);
+}
+
 .timer[data-state="holding"] {
   opacity: 0.55;
-  transform: scale(0.985);
 }
 
 .timer[data-state="ready"] {
   opacity: 1;
-  transform: scale(1.025);
 }
 
 .timer[data-font="classic"] {
@@ -233,6 +236,13 @@ select {
 
 .settings-button:hover {
   background: color-mix(in srgb, var(--timer-color) 13%, var(--page-background));
+}
+
+.timer-surface[data-state="ready"] ~ .settings-button,
+.timer-surface[data-state="running"] ~ .settings-button {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .settings-button:active {

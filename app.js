@@ -113,7 +113,7 @@
     surface.inert = false;
     settingsButton.setAttribute("aria-expanded", "false");
 
-    if (returnFocus) settingsButton.focus();
+    if (returnFocus) surface.focus({ preventScroll: true });
   }
 
   function formatTime(milliseconds) {
@@ -252,7 +252,13 @@
     setPhase(PHASE.HOLDING);
 
     state.holdTimeoutId = window.setTimeout(() => {
-      if (state.phase === PHASE.HOLDING) setPhase(PHASE.READY);
+      if (state.phase !== PHASE.HOLDING) return;
+
+      // A new attempt clears the previous result as soon as the timer is ready to start.
+      state.elapsedMs = 0;
+      state.lastRenderedCentisecond = -1;
+      renderTime(0, true);
+      setPhase(PHASE.READY);
     }, HOLD_THRESHOLD_MS);
   }
 

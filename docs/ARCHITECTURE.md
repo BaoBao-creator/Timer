@@ -26,7 +26,7 @@ phaseBeforeHold lưu trạng thái cần quay lại nếu thao tác giữ bị h
 ### Pointer (chuột, cảm ứng, bút)
 1. pointerdown trên #timer-surface bắt đầu giữ khi state là idle hoặc stopped.
 2. setPointerCapture được dùng để tiếp tục nhận pointer event nếu ngón tay/chuột di chuyển ra ngoài vùng ban đầu.
-3. Sau 500 ms, state chuyển holding → ready; timer thay đổi độ mờ/kích thước nhẹ để phản hồi mà không cần chữ hướng dẫn.
+3. Sau 500 ms, kết quả lượt trước được reset về 0.00 và state chuyển holding → ready; timer thu nhỏ, nút cài đặt ẩn cho đến khi lượt giải dừng.
 4. pointerup đúng pointer ID bắt đầu timer nếu thời gian giữ đạt ngưỡng; nếu chưa đạt, quay về state trước khi giữ.
 5. pointercancel hoặc mất focus hủy thao tác đang giữ.
 6. Khi state là running, pointerdown dừng timer ngay.
@@ -59,4 +59,5 @@ phaseBeforeHold lưu trạng thái cần quay lại nếu thao tác giữ bị h
 - Listener pointer và keyboard có logic khác nhau ở đầu vào nhưng phải hội tụ tại startTimer() và stopTimer().
 - stopTimer() phải lấy timestamp thực tế, không lấy giá trị hiển thị gần nhất, để tránh sai số do frame bị throttle.
 - clearHoldData() phải được gọi khi thao tác giữ kết thúc/hủy để tránh timeout hoặc pointer ID cũ còn tồn tại.
-- openSettings()/closeSettings() phải đồng bộ hidden, inert và aria-expanded; không để bảng cài đặt chặn hoặc kích hoạt timer ngoài ý muốn.
+- openSettings()/closeSettings() phải đồng bộ hidden, inert và aria-expanded; khi đóng, focus được chuyển về vùng timer (không trả về nút cài đặt) để Space không kích hoạt click mặc định của button.
+- Nút cài đặt ẩn trong ready và running, chỉ hiện lại ở idle/stopped.
