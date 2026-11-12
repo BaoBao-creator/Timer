@@ -2,6 +2,7 @@
   "use strict";
 
   const HOLD_THRESHOLD_MS = 500;
+  const STORAGE_KEY = "rubik-timer-settings";
   const PHASE = Object.freeze({
     IDLE: "idle",
     HOLDING: "holding",
@@ -10,11 +11,24 @@
     STOPPED: "stopped"
   });
 
+  const FONT_OPTIONS = new Set(["modern", "classic", "elegant", "mono", "seven"]);
+  const DEFAULT_SETTINGS = Object.freeze({
+    background: "#f3efe7",
+    timerColor: "#293448",
+    font: "modern"
+  });
+
   const surface = document.getElementById("timer-surface");
   const timerDisplay = document.getElementById("timer");
-  const hint = document.getElementById("hint");
+  const settingsButton = document.getElementById("settings-button");
+  const settingsPanel = document.getElementById("settings-panel");
+  const closeSettingsButton = document.getElementById("close-settings");
+  const backgroundInput = document.getElementById("background-color");
+  const timerColorInput = document.getElementById("timer-color");
+  const fontSelect = document.getElementById("font-style");
 
-  if (!surface || !timerDisplay || !hint) {
+  if (!surface || !timerDisplay || !settingsButton || !settingsPanel
+    || !closeSettingsButton || !backgroundInput || !timerColorInput || !fontSelect) {
     console.error("Rubik Timer: required UI elements are missing.");
     return;
   }
@@ -29,8 +43,78 @@
     startedAt: 0,
     elapsedMs: 0,
     animationFrameId: 0,
-    lastRenderedCentisecond: -1
+    lastRenderedCentisecond: -1,
+    settingsOpen: false,
+    segmentPattern: "",
+    segmentDigits: []
   };
+
+  function isHexColor(value) {
+    return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value);
+  }
+
+  function loadSettings() {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "null");
+      if (!stored || typeof stored !== "object") return { ...DEFAULT_SETTINGS };
+
+      return {
+        background: isHexColor(stored.background)
+          ? stored.background : DEFAULT_SETTINGS.background,
+        timerColor: isHexColor(stored.timerColor)
+          ? stored.timerColor : DEFAULT_SETTINGS.timerColor,
+        font: FONT_OPTIONS.has(stored.font) ? stored.font : DEFAULT_SETTINGS.font
+      };
+    } catch {
+      return { ...DEFAULT_SETTINGS };
+    }
+  }
+
+  const settings = loadSettings();
+
+  function saveSettings() {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    } catch {
+      // The current tab still keeps the selected settings if storage is unavailable.
+    }
+  }
+
+  function applySettings(persist = true) {
+    document.documentElement.style.setProperty("--page-background", settings.background);
+    document.documentElement.style.setProperty("--timer-color", settings.timerColor);
+    timerDisplay.dataset.font = settings.font;
+
+    backgroundInput.value = settings.background;
+    timerColorInput.value = settings.timerColor;
+    fontSelect.value = settings.font;
+
+    const formatted = formatTime(state.elapsedMs);
+    renderTimerValue(formatted);
+    timerDisplay.setAttribute("aria-label", "Thời gian: " + formatted);
+
+    if (persist) saveSettings();
+  }
+
+  function openSettings() {
+    state.settingsOpen = true;
+    cancelHold();
+    settingsPanel.hidden = false;
+    surface.inert = true;
+    settingsButton.setAttribute("aria-expanded", "true");
+    closeSettingsButton.focus();
+  }
+
+  function closeSettings(returnFocus = true) {
+    if (!state.settingsOpen) return;
+
+    state.settingsOpen = false;
+    settingsPanel.hidden = true;
+    surface.inert = false;
+    settingsButton.setAttribute("aria-expanded", "false");
+
+    if (returnFocus) settingsButton.focus();
+  }
 
   function formatTime(milliseconds) {
     const centiseconds = Math.floor(Math.max(0, milliseconds) / 10);
@@ -48,19 +132,102 @@
   function setPhase(phase) {
     state.phase = phase;
     surface.dataset.state = phase;
+    timerDisplay.dataset.state = phase;
   }
 
-  function setHint(message) {
-    hint.textContent = message;
+  const SEGMENT_MAP = Object.freeze([
+    "abcdef",
+    "bc",
+    "abdeg",
+    "abcdg",
+    "bcfg",
+    "acdfg",
+    "acdefg",
+    "abc",
+    "abcdefg",
+    "abcdfg"
+  ]);
+  const SEGMENT_NAMES = ["a", "b", "c", "d", "e", "f", "g"];
+
+  function renderTextTime(formatted) {
+    if (timerDisplay.textContent !== formatted) {
+      timerDisplay.textContent = formatted;
+    }
+    state.segmentPattern = "";
+    state.segmentDigits = [];
   }
 
-  function renderTime(milliseconds) {
+  function renderSevenSegment(formatted) {
+    const pattern = Array.from(formatted, (character) =>
+      /\d/.test(character) ? "#" : character
+    ).join("");
+
+    if (state.segmentPattern !== pattern) {
+      const fragment = document.createDocumentFragment();
+      const digitRecords = [];
+
+      for (const character of formatted) {
+        if (/\d/.test(character)) {
+          const digit = document.createElement("span");
+          digit.className = "digit";
+          digit.setAttribute("aria-hidden", "true");
+          const segments = [];
+
+          for (const name of SEGMENT_NAMES) {
+            const segment = document.createElement("i");
+            segment.className = "segment segment-" + name;
+            digit.appendChild(segment);
+            segments.push(segment);
+          }
+
+          fragment.appendChild(digit);
+          digitRecords.push({ segments });
+        } else {
+          const separator = document.createElement("span");
+          separator.className = character === ":"
+            ? "separator separator-colon"
+            : "separator separator-dot";
+          separator.setAttribute("aria-hidden", "true");
+          fragment.appendChild(separator);
+        }
+      }
+
+      timerDisplay.replaceChildren(fragment);
+      state.segmentPattern = pattern;
+      state.segmentDigits = digitRecords;
+    }
+
+    let digitIndex = 0;
+    for (const character of formatted) {
+      if (!/\d/.test(character)) continue;
+
+      const activeSegments = SEGMENT_MAP[Number(character)];
+      const record = state.segmentDigits[digitIndex];
+      for (let index = 0; index < SEGMENT_NAMES.length; index += 1) {
+        record.segments[index].classList.toggle(
+          "is-on",
+          activeSegments.includes(SEGMENT_NAMES[index])
+        );
+      }
+      digitIndex += 1;
+    }
+  }
+
+  function renderTimerValue(formatted) {
+    if (settings.font === "seven") {
+      renderSevenSegment(formatted);
+    } else {
+      renderTextTime(formatted);
+    }
+  }
+
+  function renderTime(milliseconds, force = false) {
     const centiseconds = Math.floor(Math.max(0, milliseconds) / 10);
-    if (centiseconds === state.lastRenderedCentisecond) return;
+    if (!force && centiseconds === state.lastRenderedCentisecond) return;
 
     state.lastRenderedCentisecond = centiseconds;
     const formatted = formatTime(centiseconds * 10);
-    timerDisplay.textContent = formatted;
+    renderTimerValue(formatted);
     timerDisplay.setAttribute("aria-label", "Thời gian: " + formatted);
   }
 
@@ -83,12 +250,9 @@
     state.activePointerId = pointerId;
     state.holdStartedAt = performance.now();
     setPhase(PHASE.HOLDING);
-    setHint("Giữ thêm một chút...");
 
     state.holdTimeoutId = window.setTimeout(() => {
-      if (state.phase !== PHASE.HOLDING) return;
-      setPhase(PHASE.READY);
-      setHint("Thả ra để bắt đầu");
+      if (state.phase === PHASE.HOLDING) setPhase(PHASE.READY);
     }, HOLD_THRESHOLD_MS);
   }
 
@@ -98,9 +262,6 @@
     const returnPhase = state.phaseBeforeHold;
     clearHoldData();
     setPhase(returnPhase);
-    setHint(returnPhase === PHASE.STOPPED
-      ? "Giữ màn hình hoặc phím cách để giải lượt mới"
-      : "Nhấn giữ màn hình hoặc phím cách");
   }
 
   function startTimer(startTime) {
@@ -109,8 +270,7 @@
     state.elapsedMs = 0;
     state.lastRenderedCentisecond = -1;
     setPhase(PHASE.RUNNING);
-    setHint("Chạm màn hình hoặc nhấn phím bất kỳ để dừng");
-    renderTime(0);
+    renderTime(0, true);
 
     if (state.animationFrameId) {
       window.cancelAnimationFrame(state.animationFrameId);
@@ -136,8 +296,7 @@
     }
 
     setPhase(PHASE.STOPPED);
-    renderTime(state.elapsedMs);
-    setHint("Giữ màn hình hoặc phím cách để giải lượt mới");
+    renderTime(state.elapsedMs, true);
   }
 
   function releaseHold(source, pointerId = null) {
@@ -159,13 +318,51 @@
     }
 
     setPhase(returnPhase);
-    setHint(returnPhase === PHASE.STOPPED
-      ? "Giữ màn hình hoặc phím cách để giải lượt mới"
-      : "Nhấn giữ màn hình hoặc phím cách");
   }
 
+  function isSettingsControl(target) {
+    return settingsButton.contains(target) || settingsPanel.contains(target);
+  }
+
+  settingsButton.addEventListener("click", () => {
+    if (state.settingsOpen) {
+      closeSettings();
+    } else {
+      openSettings();
+    }
+  });
+
+  closeSettingsButton.addEventListener("click", () => closeSettings());
+
+  settingsPanel.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeSettings();
+    }
+  });
+
+  backgroundInput.addEventListener("input", () => {
+    if (!isHexColor(backgroundInput.value)) return;
+    settings.background = backgroundInput.value;
+    applySettings(false);
+  });
+  backgroundInput.addEventListener("change", saveSettings);
+
+  timerColorInput.addEventListener("input", () => {
+    if (!isHexColor(timerColorInput.value)) return;
+    settings.timerColor = timerColorInput.value;
+    applySettings(false);
+  });
+  timerColorInput.addEventListener("change", saveSettings);
+
+  fontSelect.addEventListener("change", () => {
+    if (!FONT_OPTIONS.has(fontSelect.value)) return;
+    settings.font = fontSelect.value;
+    applySettings();
+  });
+
   surface.addEventListener("pointerdown", (event) => {
-    if (!event.isPrimary || event.button !== 0) return;
+    if (!event.isPrimary || event.button !== 0 || state.settingsOpen) return;
 
     if (state.phase === PHASE.RUNNING) {
       stopTimer();
@@ -196,6 +393,14 @@
   window.addEventListener("keydown", (event) => {
     if (event.defaultPrevented || event.isComposing) return;
 
+    if (event.code === "Escape" && state.settingsOpen) {
+      event.preventDefault();
+      closeSettings();
+      return;
+    }
+
+    if (isSettingsControl(event.target)) return;
+
     if (state.phase === PHASE.RUNNING) {
       if (event.code === "Space") event.preventDefault();
       stopTimer();
@@ -214,6 +419,7 @@
   });
 
   window.addEventListener("keyup", (event) => {
+    if (isSettingsControl(event.target)) return;
     if (event.code === "Space" && state.holdSource === "keyboard") {
       event.preventDefault();
       releaseHold("keyboard");
@@ -234,5 +440,6 @@
     }
   });
 
+  applySettings(false);
   setPhase(PHASE.IDLE);
 })();

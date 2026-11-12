@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#101114">
+  <meta name="theme-color" content="#f3efe7">
   <meta name="description" content="Bộ bấm giờ đơn giản để luyện giải Rubik.">
   <title>Rubik Timer</title>
   <link rel="stylesheet" href="styles.css">
@@ -11,9 +11,51 @@
 </head>
 <body>
   <main class="timer-surface" id="timer-surface">
-    <div class="timer" id="timer" role="timer" aria-live="off" aria-label="Thời gian: 0.00">0.00</div>
-    <p class="hint" id="hint" role="status" aria-live="polite">Nhấn giữ màn hình hoặc phím cách</p>
-    <p class="instructions">Giữ hơn 0,5 giây · Thả để bắt đầu · Chạm hoặc nhấn phím bất kỳ để dừng</p>
+    <div class="timer" id="timer" data-font="modern" role="timer"
+      aria-live="off" aria-label="Thời gian: 0.00">0.00</div>
   </main>
+
+  <button class="settings-button" id="settings-button" type="button"
+    aria-label="Mở cài đặt" aria-haspopup="dialog" aria-expanded="false"
+    aria-controls="settings-panel">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.1"/>
+      <circle cx="12" cy="12" r="8.2"/>
+      <path d="M12 1.8v2.1M12 20.1v2.1M1.8 12h2.1M20.1 12h2.1M4.8 4.8l1.5 1.5m11.4 11.4 1.5 1.5m0-14.4-1.5 1.5M6.3 17.7l-1.5 1.5"/>
+    </svg>
+  </button>
+
+  <section class="settings-panel" id="settings-panel" role="dialog"
+    aria-label="Cài đặt giao diện" aria-modal="false" hidden>
+    <div class="settings-heading">
+      <h1>Cài đặt</h1>
+      <button class="close-settings" id="close-settings" type="button" aria-label="Đóng cài đặt">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m6 6 12 12M18 6 6 18"/>
+        </svg>
+      </button>
+    </div>
+
+    <label class="setting-row" for="background-color">
+      <span>Màu nền</span>
+      <input id="background-color" type="color" value="#f3efe7">
+    </label>
+
+    <label class="setting-row" for="timer-color">
+      <span>Màu timer</span>
+      <input id="timer-color" type="color" value="#293448">
+    </label>
+
+    <label class="font-setting" for="font-style">
+      <span>Kiểu chữ</span>
+      <select id="font-style">
+        <option value="modern">Hiện đại</option>
+        <option value="classic">Cổ điển</option>
+        <option value="elegant">Thanh lịch</option>
+        <option value="mono">Máy đánh chữ</option>
+        <option value="seven">LED 7 đoạn</option>
+      </select>
+    </label>
+  </section>
 </body>
 </html>

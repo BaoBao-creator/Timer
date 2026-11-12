@@ -1,8 +1,10 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+  --page-background: #f3efe7;
+  --timer-color: #293448;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #101114;
-  color: #f4f5f7;
+  background: var(--page-background);
+  color: var(--timer-color);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -21,11 +23,19 @@ body {
   margin: 0;
   overflow: hidden;
   overscroll-behavior: none;
+  background: var(--page-background);
 }
 
 body {
   min-height: 100vh;
   min-height: 100svh;
+  transition: background-color 120ms ease;
+}
+
+button,
+input,
+select {
+  font: inherit;
 }
 
 .timer-surface {
@@ -33,71 +43,337 @@ body {
   min-height: 100vh;
   min-height: 100svh;
   min-height: 100dvh;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+  padding: max(28px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
   text-align: center;
   cursor: default;
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+  touch-action: none;
 }
 
 .timer {
   max-width: 100%;
-  font-size: clamp(4.5rem, 20vw, 12rem);
-  font-weight: 500;
+  color: var(--timer-color);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: clamp(4.5rem, 19vw, 12rem);
+  font-weight: 450;
   line-height: 1;
   letter-spacing: -0.065em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  transition: opacity 100ms ease, transform 100ms ease;
 }
 
-.hint {
-  min-height: 1.5em;
-  margin: 28px 0 0;
-  color: #d7d9df;
-  font-size: clamp(1rem, 3.5vw, 1.2rem);
-  line-height: 1.5;
+.timer[data-state="holding"] {
+  opacity: 0.55;
+  transform: scale(0.985);
 }
 
-.instructions {
-  max-width: 34rem;
-  margin: 10px 0 0;
-  color: #858994;
-  font-size: 0.875rem;
-  line-height: 1.6;
+.timer[data-state="ready"] {
+  opacity: 1;
+  transform: scale(1.025);
 }
 
-.timer-surface[data-state="holding"] .hint {
-  color: #f0b35d;
+.timer[data-font="classic"] {
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.055em;
 }
 
-.timer-surface[data-state="ready"] .hint {
-  color: #78d69a;
+.timer[data-font="elegant"] {
+  font-family: Didot, "Bodoni MT", "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.045em;
 }
 
-.timer-surface[data-state="running"] .hint {
-  color: #aeb3be;
+.timer[data-font="mono"] {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-weight: 400;
+  letter-spacing: -0.075em;
+}
+
+.timer[data-font="seven"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.075em;
+  font-size: clamp(3.8rem, 16.5vw, 10.5rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.digit {
+  position: relative;
+  display: inline-block;
+  width: 0.62em;
+  height: 1em;
+  flex: 0 0 auto;
+}
+
+.segment {
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.13;
+}
+
+.segment.is-on {
+  opacity: 1;
+}
+
+.segment-a,
+.segment-d,
+.segment-g {
+  left: 19%;
+  width: 62%;
+  height: 8%;
+}
+
+.segment-a {
+  top: 0;
+}
+
+.segment-g {
+  top: 46%;
+}
+
+.segment-d {
+  bottom: 0;
+}
+
+.segment-b,
+.segment-c,
+.segment-e,
+.segment-f {
+  width: 8%;
+  height: 34%;
+}
+
+.segment-b,
+.segment-c {
+  right: 0;
+}
+
+.segment-e,
+.segment-f {
+  left: 0;
+}
+
+.segment-b,
+.segment-f {
+  top: 9%;
+}
+
+.segment-c,
+.segment-e {
+  bottom: 9%;
+}
+
+.separator {
+  position: relative;
+  display: inline-block;
+  width: 0.2em;
+  height: 1em;
+  flex: 0 0 auto;
+}
+
+.separator-colon::before,
+.separator-colon::after,
+.separator-dot::after {
+  position: absolute;
+  width: 0.09em;
+  height: 0.09em;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+
+.separator-colon::before {
+  top: 31%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.separator-colon::after {
+  bottom: 31%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.separator-dot::after {
+  right: 0;
+  bottom: 0.04em;
+}
+
+.settings-button {
+  position: fixed;
+  z-index: 5;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--timer-color) 7%, var(--page-background));
+  color: var(--timer-color);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+
+.settings-button:hover {
+  background: color-mix(in srgb, var(--timer-color) 13%, var(--page-background));
+}
+
+.settings-button:active {
+  transform: scale(0.94);
+}
+
+.settings-button:focus-visible,
+.close-settings:focus-visible,
+.settings-panel input:focus-visible,
+.settings-panel select:focus-visible {
+  outline: 2px solid var(--timer-color);
+  outline-offset: 3px;
+}
+
+.settings-button svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.settings-panel {
+  position: fixed;
+  z-index: 6;
+  top: calc(max(16px, env(safe-area-inset-top)) + 54px);
+  right: max(16px, env(safe-area-inset-right));
+  width: min(320px, calc(100vw - 24px));
+  max-height: calc(100dvh - 88px);
+  overflow-y: auto;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--timer-color) 12%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--page-background) 94%, white);
+  color: var(--timer-color);
+  box-shadow: 0 16px 48px rgb(25 30 40 / 14%);
+  touch-action: pan-y;
+}
+
+.settings-panel[hidden] {
+  display: none;
+}
+
+.settings-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.settings-heading h1 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.close-settings {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--timer-color) 7%, transparent);
+  color: inherit;
+  cursor: pointer;
+}
+
+.close-settings svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.setting-row,
+.font-setting {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid color-mix(in srgb, var(--timer-color) 10%, transparent);
+  color: inherit;
+  font-size: 0.9rem;
+}
+
+.setting-row input[type="color"] {
+  width: 46px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid color-mix(in srgb, var(--timer-color) 18%, transparent);
+  border-radius: 9px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.font-setting {
+  flex-wrap: wrap;
+  padding-top: 12px;
+}
+
+.font-setting select {
+  width: 100%;
+  height: 42px;
+  padding: 0 11px;
+  border: 1px solid color-mix(in srgb, var(--timer-color) 18%, transparent);
+  border-radius: 10px;
+  background: var(--page-background);
+  color: var(--timer-color);
+  cursor: pointer;
 }
 
 @media (max-width: 480px) {
-  .timer-surface {
-    padding-inline: 12px;
-  }
-
   .timer {
-    font-size: clamp(4rem, 19vw, 6.5rem);
+    font-size: clamp(4rem, 18.5vw, 6.5rem);
   }
 
-  .hint {
-    margin-top: 22px;
+  .timer[data-font="seven"] {
+    font-size: clamp(3.1rem, 15.5vw, 5.8rem);
+    gap: 0.055em;
   }
 
-  .instructions {
-    max-width: 19rem;
-    font-size: 0.8rem;
+  .settings-button {
+    width: 42px;
+    height: 42px;
+  }
+
+  .settings-panel {
+    top: calc(max(12px, env(safe-area-inset-top)) + 52px);
+    right: max(12px, env(safe-area-inset-right));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
   }
 }

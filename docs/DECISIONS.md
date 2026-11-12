@@ -21,6 +21,12 @@
 - **Ràng buộc:** Không thay nguồn đo bằng số lần callback timer/animation chạy.
 
 ## Quy tắc dừng
-- **Quyết định:** Trong state running, pointerdown chính hoặc keydown bất kỳ dừng lượt hiện tại.
-- **Lý do:** Khớp thao tác dừng đơn giản trên cả máy tính và điện thoại.
+- **Quyết định:** Trong state running, pointerdown trên vùng timer hoặc keydown ngoài control cài đặt dừng lượt hiện tại.
+- **Lý do:** Khớp thao tác dừng đơn giản trên cả máy tính và điện thoại, đồng thời cho phép người dùng thao tác trong settings mà không vô tình dừng timer.
 - **Ràng buộc:** Pointerup/keyup của thao tác đã bắt đầu timer không được tự dừng lượt vừa bắt đầu.
+
+## Cài đặt giao diện lưu cục bộ
+- **Quyết định:** Lưu màu nền, màu timer và lựa chọn font trong localStorage.
+- **Lý do:** Tùy chỉnh cần được giữ lại giữa các lần tải trang mà không cần backend/tài khoản.
+- **Ràng buộc:** Dữ liệu phải được xác thực khi đọc; nếu storage lỗi hoặc giá trị không hợp lệ thì dùng mặc định. Cài đặt không đồng bộ giữa thiết bị/trình duyệt.
+- **Quyết định font LED:** Dùng các đoạn CSS thay vì tải font bên ngoài để giao diện hoạt động offline và không thêm request phụ thuộc.
